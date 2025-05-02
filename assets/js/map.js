@@ -2,7 +2,7 @@ import 'ol/ol.css';
 import 'ol-layerswitcher/dist/ol-layerswitcher.css';
 import { Map, View, Overlay } from 'ol';
 import { Tile, Image, Group, Vector } from 'ol/layer';
-import { OSM, ImageWMS, BingMaps, StadiaMaps } from 'ol/source';
+import { OSM, ImageWMS, XYZ, StadiaMaps } from 'ol/source';
 import VectorSource from 'ol/source/Vector';
 import { GeoJSON } from 'ol/format';
 import { fromLonLat } from 'ol/proj';
@@ -17,6 +17,7 @@ let osm = new Tile({
     visible: true,
     source: new OSM()
 });
+
 let colombiaBoundary = new Image({
     title: "Colombia Administrative level 0",
     source: new ImageWMS({
@@ -39,11 +40,12 @@ var colombiaRoads = new Image({
         url: 'https://www.gis-geoserver.polimi.it/geoserver/wms',
         params: { 'LAYERS': 'gis:COL_roads' }
     }),
-    visible: false
+    visible: true
 });
 
 var colombiaRivers = new Image({
     title: "Colombia Rivers",
+    type: "overlay",
     source: new ImageWMS({
         url: 'https://www.gis-geoserver.polimi.it/geoserver/wms',
         params: { 'LAYERS': 'gis:COL_rivers' }
@@ -53,27 +55,30 @@ var colombiaRivers = new Image({
 });
 
 //Create the layer groups and add the layers to them
-let basemapLayers = new Group({
-    title: "Base Maps",
-    layers: [osm]
-})
+let basemapLayers = new Group({ 
+    title: 'Base Maps', 
+    layers: [osm] 
+});
 
-let overlayLayers = new Group({
-    title: "Overlay Layers",
+let overlayLayers = new Group({ 
+    title: 'Overlay Layers', 
     layers: [
         colombiaBoundary, 
         colombiaDepartments, 
         colombiaRivers, 
         colombiaRoads
     ]
-})
+});
+
+let mapLayers = [basemapLayers, overlayLayers]
 
 // Map Initialization
 let mapOrigin = fromLonLat([-74, 4.6]);
 let zoomLevel = 5;
 let map = new Map({
     target: document.getElementById('map'),
-    layers: [basemapLayers, overlayLayers],
+    //layers: [basemapLayers, overlayLayers],
+    layers: mapLayers,
     view: new View({
         center: mapOrigin,
         zoom: zoomLevel
@@ -82,60 +87,72 @@ let map = new Map({
 });
 
 // Add the map controls:
-// map.addControl(new ScaleLine());
-// map.addControl(new FullScreen());
-// map.addControl(new MousePosition({
-//     coordinateFormat: createStringXY(4),
-//     projection: 'EPSG:4326',
-//     className: 'custom-control',
-//     placeholder: '0.0000, 0.0000'
-// }));
+map.addControl(new ScaleLine()); 
+map.addControl(new FullScreen());
+map.addControl(
+    new MousePosition({
+        coordinateFormat: createStringXY(4),
+        projection: 'EPSG:4326',
+        className: 'custom-control',
+        placeholder: '0.0000, 0.0000'
+    })
+);
 
-// let layerSwitcher = new LayerSwitcher({});
-// map.addControl(layerSwitcher);
+
+let layerSwitcher = new LayerSwitcher({});
+map.addControl(layerSwitcher);
 
 //Add the Stadia Maps layers
-// var stadiaWatercolor = new Tile({
-//     title: "Stadia Watercolor",
-//     type: "base",
-//     visible: false,
-//     source: new StadiaMaps({
-//         layer: 'stamen_watercolor'
-//     })
-// })
-// var stadiaToner = new Tile({
-//     title: "Stadia Toner",
-//     type: "base",
-//     visible: false,
-//     source: new StadiaMaps({
-//         layer: 'stamen_toner'
-//     })
-// })
-// basemapLayers.getLayers().extend([stadiaWatercolor, stadiaToner]);
+var stamenWatercolor = new Tile({ 
+    title: 'Stamen Watercolor', 
+    type: 'base', 
+    visible: false, 
+    source: new StadiaMaps({ 
+        layer: 'stamen_watercolor' 
+    }) 
+}); 
+var stamenToner = new Tile({ 
+    title: 'Stamen Toner', 
+    type: 'base', 
+    visible: false, 
+    source: new StadiaMaps({ 
+        layer: 'stamen_toner' 
+    }) 
+});  
 
-//OPTIONAL
-//Add the Bing Maps layers
-// var BING_MAPS_KEY = "PUT_YOUR_BING_MAPS_KEY_HERE"; //Replace with your Bing Maps key
-// var bingRoads = new Tile({
-//     title: 'Bing Maps—Roads',
-//     type: 'base',
-//     visible: false,
-//     source: new BingMaps({
-//         key: BING_MAPS_KEY,
-//         imagerySet: 'Road'
-//     })
-// });
+basemapLayers.getLayers().extend([stamenWatercolor, stamenToner]);
 
-// var bingAerial = new Tile({
-//     title: 'Bing Maps—Aerial',
-//     type: 'base',
-//     visible: false,
-//     source: new BingMaps({
-//         key: BING_MAPS_KEY,
-//         imagerySet: 'Aerial'
-//     })
-// });
-// basemapLayers.getLayers().extend([bingRoads, bingAerial]);
+// Add ESRI basemap layers
+var esriTopoBasemap = new Tile({
+    title: 'ESRI Topographic',
+    type: 'base',
+    visible: false,
+    source: new XYZ({
+        attributions:
+            'Tiles © <a href="https://services.arcgisonline.com/ArcGIS/' +
+            'rest/services/World_Topo_Map/MapServer">ArcGIS</a>',
+        url:
+            'https://server.arcgisonline.com/ArcGIS/rest/services/' +
+            'World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+    }),
+});
+var esriWorldImagery = new Tile({
+    title: 'ESRI World Imagery',
+    type: 'base',
+    visible: false,
+    source: new XYZ({
+        attributions:
+            'Tiles © <a href="https://services.arcgisonline.com/ArcGIS/' +
+            'rest/services/World_Imagery/MapServer">ArcGIS</a>',
+        url:
+            'https://server.arcgisonline.com/ArcGIS/rest/services/' +
+            'World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    }),
+});
+basemapLayers.getLayers().extend([
+    esriTopoBasemap, esriWorldImagery
+]);
+
 
 // Add a static GeoJSON file to the map
 // let staticGeoJSONSource = new VectorSource({
