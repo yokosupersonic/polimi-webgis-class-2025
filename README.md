@@ -1,5 +1,5 @@
-# GIS 2024 - Politecnico di Milano
-Repository for the Web Development part of the GIS lessons 2023 - 2024.
+# GIS 2025 - Politecnico di Milano
+Repository for the Web Development part of the GIS lessons 2025.
 
 The contents of this repository are entirely for learning purposes. All contents and code is completely open and available and based on open-source software.
 

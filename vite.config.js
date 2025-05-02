@@ -7,10 +7,6 @@ export default {
     // Complete documentation of Vite configuration on
     //      https://vitejs.dev/config/
 
-    // Change to the name of your repository
-    // According to https://vitejs.dev/guide/static-deploy.html 
-    // base: '/polimi-webgis-class-2025/', 
-
     publicDir: "public",
 
     // Options for the build command
