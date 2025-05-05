@@ -9,8 +9,8 @@ import { fromLonLat } from 'ol/proj';
 import { ScaleLine, FullScreen, MousePosition, } from 'ol/control';
 import LayerSwitcher from 'ol-layerswitcher';
 import { createStringXY } from 'ol/coordinate';
-
 import { Style, Fill, Stroke } from 'ol/style';
+
 
 // OpenStreetMap base map
 let osm = new Tile({
