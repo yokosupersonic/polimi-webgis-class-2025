@@ -11,6 +11,9 @@ export default {
 
     // Options for the build command
     build: {
+        // This is the target build language.
+        target: "ES2022",
+
         // The name of the folder to which the build is stored.
         // As the folder that github pages expects is /docs, we export to /docs folder.
         outDir: 'docs',
@@ -37,5 +40,5 @@ export default {
                 ),
             },
         },
-    }
+    },
   }
