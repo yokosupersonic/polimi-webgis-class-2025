@@ -3,7 +3,7 @@ Repository for the Web Development part of the GIS lessons 2025.
 
 The contents of this repository are entirely for learning purposes. All contents and code is completely open and available and based on open-source software.
 
-Students are encouraged to fork and and modify this template as much as they want.
+Students are encouraged to fork and modify this template as much as they want.
 
 ## Installing
 Clone the repository using the command 
@@ -32,17 +32,28 @@ Using Vite it is possible to follow the examples of OpenLayers, as well as use m
 as intellisense, fast reload, documentation, and code completion.
 
 ## Building
-Run the command 
+For testing, it is recomended to first try a local build with the command:
 ```sh
-npm run build
+npm run build-local
 ```
 
-This will re-create the folder /docs with all the necessary files for hosting the website in GitHub Pages.
+Then, for testing the local build, run the preview command:
+```sh
+npm run preview
+```
 
-Modify the configuration file (vite.config.js) for different build configurations and folder structures.
-This is a dummy project and is not intended to be a one-fits-all configuration.
+If everything is correct, generate the production build by running the production build command:
+```sh
+npm run build-production
+```
+
+This will create the folder /docs (or overwrite it, if it is already created) with all the necessary files for hosting the website in GitHub Pages.
+
+In case the name of the repository is changed during fork, modify the configuration file (vite.config.js), and the package.json file accordingly for different build configurations and folder structures.
 
 ## Credits
+This project is entirely academic and non-profit.
+
 The website is based on the template:
 
 Twenty by HTML5 UP
@@ -51,5 +62,19 @@ Free for personal and commercial use under the CCA 3.0 license (html5up.net/lice
 
 Adaptation to Vite and OpenLayers by Diuke
 https://github.com/Diuke
+
+Attributions for basemaps:
+
+© Stadia Maps - https://stadiamaps.com/
+
+© OpenMapTiles - https://openmaptiles.org/
+
+© OpenStreetMap - https://www.openstreetmap.org/copyright
+
+© Stamen Design - https://stamen.com/
+
+© ArcGIS World Topo Map Tiles - https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer
+
+© ArcGIS World Imagery Tiles - https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer
 
 
