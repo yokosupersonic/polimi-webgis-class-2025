@@ -9,8 +9,8 @@ import { fromLonLat } from 'ol/proj';
 import { ScaleLine, FullScreen, MousePosition, } from 'ol/control';
 import LayerSwitcher from 'ol-layerswitcher';
 import { createStringXY } from 'ol/coordinate';
-import { Style, Stroke, Fill } from 'ol/style';
 
+// OpenStreetMap base map
 let osm = new Tile({
     title: "Open Street Map",
     type: "base",
@@ -18,31 +18,38 @@ let osm = new Tile({
     source: new OSM()
 });
 
+// Colombia Administrative Boundaries
 let colombiaBoundary = new Image({
     title: "Colombia Administrative level 0",
     source: new ImageWMS({
         url: 'https://www.gis-geoserver.polimi.it/geoserver/wms',
         params: { 'LAYERS': 'gis:COL_adm0', 'STYLES': 'restricted' }
-    })
+    }),
+    visible: false
 });
+
+// Colombia Administrative level 1
 var colombiaDepartments = new Image({
     title: "Colombia Administrative level 1",
     source: new ImageWMS({
         url: 'https://www.gis-geoserver.polimi.it/geoserver/wms',
         params: { 'LAYERS': 'gis:COL_adm1' }
     }),
-    opacity: 0.5
+    opacity: 0.5,
+    visible: false
 });
 
+// Colombia Roads
 var colombiaRoads = new Image({
     title: "Colombia Roads",
     source: new ImageWMS({
         url: 'https://www.gis-geoserver.polimi.it/geoserver/wms',
         params: { 'LAYERS': 'gis:COL_roads' }
     }),
-    visible: true
+    visible: false
 });
 
+// Colombia Rivers
 var colombiaRivers = new Image({
     title: "Colombia Rivers",
     type: "overlay",
@@ -50,6 +57,7 @@ var colombiaRivers = new Image({
         url: 'https://www.gis-geoserver.polimi.it/geoserver/wms',
         params: { 'LAYERS': 'gis:COL_rivers' }
     }),
+    visible: false,
     minResolution: 1000,
     maxResolution: 5000
 });
@@ -70,15 +78,13 @@ let overlayLayers = new Group({
     ]
 });
 
-let mapLayers = [basemapLayers, overlayLayers]
-
 // Map Initialization
 let mapOrigin = fromLonLat([-74, 4.6]);
 let zoomLevel = 5;
 let map = new Map({
     target: document.getElementById('map'),
     //layers: [basemapLayers, overlayLayers],
-    layers: mapLayers,
+    layers: [],
     view: new View({
         center: mapOrigin,
         zoom: zoomLevel
@@ -153,142 +159,134 @@ basemapLayers.getLayers().extend([
     esriTopoBasemap, esriWorldImagery
 ]);
 
+// Adding a WFS layer
+// From the OpenLayers WFS layer example: https://openlayers.org/en/v8.2.0/examples/vector-wfs.html
+var wfsUrl = "https://www.gis-geoserver.polimi.it/geoserver/gis/wfs?" + 
+"service=WFS&" + 
+"version=2.0.0&" +
+"request=GetFeature&" + 
+"typeName=gis:COL_water_areas&" + 
+"srsname=EPSG:3857&" + 
+"outputFormat=application/json&";
+
+let wfsSource = new VectorSource({});
+
+let wfsLayer = new Vector({
+    title: "Colombia Water Areas",
+    source: wfsSource,
+    visible: true,
+    style: {
+        'stroke-width': 2,
+        'stroke-color': '#a2d2ff',
+        'fill-color': "#bde0fe"
+    },
+});
+
+// Download the features from the WFS service and add them to the source
+fetch(wfsUrl)
+.then((response) => {
+    if (!response.ok) {
+        throw new Error('Network response was not ok ' + response.statusText);
+    }
+    response.json().then(data => {
+        wfsSource.addFeatures(new GeoJSON().readFeatures(data));
+    })
+});
+
+overlayLayers.getLayers().extend([wfsLayer]);
+
 
 // Add a static GeoJSON file to the map
-// let staticGeoJSONSource = new VectorSource({
-//     url: '../geojson/COL_adm2.geojson', // Replace with the actual path to your GeoJSON file
-//     format: new GeoJSON()
-// });
+let staticGeoJSONSource = new VectorSource({
+    url: '../geojson/COL_adm2.geojson', 
+    format: new GeoJSON()
+});
 
-// let staticGeoJSONLayer = new Vector({
-//     title: "Static GeoJSON Layer",
-//     source: staticGeoJSONSource,
-//     style: new Style({
-//         stroke: new Stroke({
-//             color: "#ff7f50",
-//             width: 2
-//         }),
-//         fill: new Fill({
-//             color: "rgba(255, 127, 80, 0.5)"
-//         })
-//     })
-// });
-// overlayLayers.getLayers().extend([staticGeoJSONLayer]);
-
-//Add the WFS layer
-// let wfsSource = new VectorSource()
-// let wfsLayer = new Vector({
-//     title: "Colombia water areas",
-//     source: wfsSource,
-
-//     style: new Style({
-//         stroke: new Stroke({
-//             color: "#a2d2ff",
-//             width: 1
-//         }),
-//         fill: new Fill({
-//             color: "#bde0fe"
-//         })
-//     }),
-//     zIndex: 9999
-// });
-// overlayLayers.getLayers().extend([wfsLayer]);
-
-// This allows to use the function in a callback!
-// function loadFeatures(response) {
-//     wfsSource.addFeatures(new GeoJSON().readFeatures(response))
-// }
-// // This is not a good practice, but works for the jsonp.
-// window.loadFeatures = loadFeatures;
-
-
-// var base_url = "https://www.gis-geoserver.polimi.it/geoserver/gis/ows?";
-// var wfs_url = base_url;
-// wfs_url += "service=WFS&"
-// wfs_url += "version=2.0.0&"
-// wfs_url += "request=GetFeature&"
-// wfs_url += "typeName=gis%3ACOL_water_areas&"
-// wfs_url += "outputFormat=text%2Fjavascript&"
-// wfs_url += "srsname=EPSG:3857&"
-// wfs_url += "format_options=callback:loadFeatures"
-
-// console.log(wfs_url);
-
-// map.once('postrender', (event) => {
-//     // Load the WFS layer
-//     $.ajax({ url: wfs_url, dataType: 'jsonp' });
-    
-// })
+let staticGeoJSONLayer = new Vector({
+    title: "Colombia Municipalities",
+    source: staticGeoJSONSource,
+    style: {
+        'stroke-width': 2,
+        'stroke-color': '#ff7f50',
+        'fill-color': "rgba(255, 127, 80, 0.5)"
+    },
+});
+overlayLayers.getLayers().push(staticGeoJSONLayer);
 
 //Add the code for the Pop-up
-// var container = document.getElementById('popup');
-// var content = document.getElementById('popup-content');
-// var closer = document.getElementById('popup-closer');
+var container = document.getElementById('popup');
+var content = document.getElementById('popup-content');
+var closer = document.getElementById('popup-closer');
 
-// var popup = new Overlay({
-//     element: container
-// });
-// map.addOverlay(popup);
+var popup = new Overlay({
+    element: container
+});
+map.addOverlay(popup);
 
-// // The click event handler for closing the popup.
-// // This ensures that JQuery ($) is already available in the page.
-// $(document).ready(function () {
-//     map.on('singleclick', function (event) {
-//         //This iterates over all the features that are located on the pixel of the click (can be many)
-//         var feature = map.forEachFeatureAtPixel(event.pixel, function (feature, layer) {
-//             return feature;
-//         });
+// The click event handler for closing the popup.
+closer.onclick = function () {
+    popup.setPosition(undefined);
+    closer.blur(); 
+    return false;
+};
 
-//         //If there is a feature, open the popup by setting a position to it and put the data from the feature
-//         if (feature != null) {
-//             var pixel = event.pixel;
-//             var coord = map.getCoordinateFromPixel(pixel);
-//             popup.setPosition(coord);
-//             content.innerHTML =
-//                 '<h5>Colombia Water Areas</h5><br><b>Name: </b>' +
-//                 feature.get('NAME') +
-//                 '</br><b>Description: </b>' +
-//                 feature.get('HYC_DESCRI');
-//         } else {
-//             //Only if the colombiaRoads layer is visible, do the GetFeatureInfo request
-//             if (colombiaRoads.getVisible()) {
-//                 var viewResolution = (map.getView().getResolution());
-//                 var url = colombiaRoads.getSource().getFeatureInfoUrl(event.coordinate, viewResolution, 'EPSG:3857', { 'INFO_FORMAT': 'text/html' });
-//                 console.log(url);
+// Adding map event for pointermove
+map.on('singleclick', function (event) {
+    //This iterates over all the features that are located on the pixel of the click (can be many)
+    var feature = map.forEachFeatureAtPixel(
+        event.pixel, 
+        function (feature, layer) {
+            if(layer == staticGeoJSONLayer){
+                return feature;
+            }
+        }
+    );
 
-//                 if (url) {
-//                     var pixel = event.pixel;
-//                     var coord = map.getCoordinateFromPixel(pixel);
-//                     popup.setPosition(coord);
-//                     //We do again the AJAX request to get the data from the GetFeatureInfo request
-//                     $.ajax({ url: url })
-//                         .done((data) => {
-//                             //Put the data of the GetFeatureInfo response inside the pop-up
-//                             //The data that arrives is in HTML
-//                             content.innerHTML = data;
-//                         });
-//                 }
-//             }
-//         }
-//     });
-// });
+    //If there is a feature, open the popup by setting a position to it and put the data from the feature
+    if (feature != null) {
+        var pixel = event.pixel;
+        var coord = map.getCoordinateFromPixel(pixel);
+        popup.setPosition(coord);
+        
+        console.log(feature);
+        content.innerHTML =
+            '<h5>Administrative Level 2</h5><br>'+
+            '<span>' +  
+            feature.get('name_2') + ', ' +
+            feature.get('name_1')
+            '</span>';
+    } 
+});
+
+map.on('pointermove', function(event) { 
+    var pixel = map.getEventPixel(event.originalEvent); 
+    var hit = map.hasFeatureAtPixel(pixel); 
+    map.getTarget().style.cursor = hit ? 'pointer' : ''; 
+});
+
+var legendUrl = colombiaRivers.getSource().getLegendUrl();
+console.log(legendUrl);
 
 
+fetch(legendUrl)
+.then((response) => {
+    if (!response.ok) {
+        throw new Error('Network response was not ok ' + response.statusText);
+    }
+    response.json().then(data => {
+        var legendRules = data["Legend"][0]["rules"];
+        console.log(data["Legend"][0]);
+        for(var i = 0; i < legendRules.length; i++){
+            var rule = legendRules[i];
+            var name = rule["name"];
+            var fillColor = rule["symbolizer"]["Polygon"]["fill"];
+            var strokeColor = rule["symbolizer"]["Polygon"]["stroke"];
+            print(fillColor, strokeColor)
+        }
+        
+    })
+});
 
-// // Adding map event for pointermove
-// // The click event handler for closing the popup.
-// closer.onclick = function () {
-//     popup.setPosition(undefined);
-//     closer.blur(); 
-//     return false;
-// };
-
-// map.on('pointermove', function(event){
-//     var pixel = map.getEventPixel(event.originalEvent);
-//     var hit = map.hasFeatureAtPixel(pixel);
-//     map.getTarget().style.cursor = hit ? 'pointer' : '';
-// });
-
-// map.on('moveend', function(event){
-//     console.log("moved map");
-// });
+// Add the layers to the map after all layers have been created
+map.addLayer(basemapLayers);
+map.addLayer(overlayLayers);

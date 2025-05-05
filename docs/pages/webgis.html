@@ -13,15 +13,15 @@
     <!-- Static files are imported from public folder -->
 
     <!-- Modules are imported normally -->
-  <script type="module" crossorigin src="/polimi-webgis-class-2025/assets/webgis-Cfpu4uRZ.js"></script>
+  <script type="module" crossorigin src="/polimi-webgis-class-2025/assets/webgis-jBxddm3Z.js"></script>
   <link rel="stylesheet" crossorigin href="/polimi-webgis-class-2025/assets/webgis-D16rCtO5.css">
-  <link rel="stylesheet" crossorigin href="/polimi-webgis-class-2025/assets/custom-styles-lV9M6AZx.css">
+  <link rel="stylesheet" crossorigin href="/polimi-webgis-class-2025/assets/custom-styles-DTSUINqD.css">
 </head>
 
 <body>
     <div class="w-100 vh-100">
         <div class="floating-button">
-            <a href="../index.html" class="btn btn-primary">Go Home</a>
+            <a href="../index.html" class="btn btn-success">Go Home</a>
         </div>
         <div id="map"></div>
 
@@ -31,10 +31,21 @@
             <div id="popup-content">
             </div>
         </div>
-    </div>
 
-    <!--Scripts-->
-    <script src="/polimi-webgis-class-2025/js/jquery.min.js"></script>
+        <div id="legend" class="my-legend">
+            <h4>Legend</h4>
+            <ul class="legend-list">
+                <li>
+                    <span style="background-color: #bde0fe; border: 2px solid #a2d2ff;"></span> 
+                    <span style="margin-left:5px">Colombia Water Areas</span>
+                </li>
+                <li>
+                    <span style="background-color: rgba(255, 127, 80, 0.5); border: 2px solid #ff7f50;"></span>
+                    <span style="margin-left:5px">Colombia Municipalities</span>
+                </li>
+            </ul>
+        </div>
+    </div>
 
 </body>
 
