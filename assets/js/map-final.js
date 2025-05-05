@@ -2,37 +2,46 @@ import 'ol/ol.css';
 import 'ol-layerswitcher/dist/ol-layerswitcher.css';
 import { Map, View, Overlay } from 'ol';
 import { Tile, Image, Group, Vector } from 'ol/layer';
-import { OSM, ImageWMS, BingMaps, StadiaMaps } from 'ol/source';
+import { OSM, ImageWMS, XYZ, StadiaMaps } from 'ol/source';
 import VectorSource from 'ol/source/Vector';
 import { GeoJSON } from 'ol/format';
 import { fromLonLat } from 'ol/proj';
-import { ScaleLine, FullScreen, MousePosition } from 'ol/control';
+import { ScaleLine, FullScreen, MousePosition, } from 'ol/control';
 import LayerSwitcher from 'ol-layerswitcher';
 import { createStringXY } from 'ol/coordinate';
-import { Style, Stroke } from 'ol/style';
 
+import { Style, Fill, Stroke } from 'ol/style';
+
+// OpenStreetMap base map
 let osm = new Tile({
     title: "Open Street Map",
     type: "base",
     visible: true,
     source: new OSM()
 });
+
+// Colombia Administrative Boundaries
 let colombiaBoundary = new Image({
-    title: "Colombia Boundary",
+    title: "Colombia Administrative level 0",
     source: new ImageWMS({
         url: 'https://www.gis-geoserver.polimi.it/geoserver/wms',
-        params: { 'LAYERS': 'gis:COL_adm0', 'STYLES': 'restricted' }
-    })
+        params: { 'LAYERS': 'gis:COL_adm0' }
+    }),
+    visible: false
 });
+
+// Colombia Administrative level 1
 var colombiaDepartments = new Image({
-    title: "Colombia Departments",
+    title: "Colombia Administrative level 1",
     source: new ImageWMS({
         url: 'https://www.gis-geoserver.polimi.it/geoserver/wms',
         params: { 'LAYERS': 'gis:COL_adm1' }
     }),
-    opacity: 0.5
+    opacity: 0.5,
+    visible: false
 });
 
+// Colombia Roads
 var colombiaRoads = new Image({
     title: "Colombia Roads",
     source: new ImageWMS({
@@ -41,38 +50,52 @@ var colombiaRoads = new Image({
     }),
     visible: false
 });
+
+// Colombia Rivers
 var colombiaRivers = new Image({
     title: "Colombia Rivers",
+    type: "overlay",
     source: new ImageWMS({
         url: 'https://www.gis-geoserver.polimi.it/geoserver/wms',
         params: { 'LAYERS': 'gis:COL_rivers' }
     }),
+    visible: false,
     minResolution: 1000,
     maxResolution: 5000
 });
 
-//Create the layer groups and add the layers to them
+// Add the layer groups code here:
 let basemapLayers = new Group({
-    title: "Base Maps",
+    title: 'Base Maps',
     layers: [osm]
 });
 let overlayLayers = new Group({
-    title: "Overlay Layers",
-    layers: [colombiaDepartments, colombiaRivers, colombiaRoads]
-})
-
-// Map Initialization
-let map = new Map({
-    target: document.getElementById('map'),
-    layers: [basemapLayers, overlayLayers],
-    view: new View({
-        center: fromLonLat([-74, 4.6]),
-        zoom: 5
-    })
+    title: 'Overlay Layers',
+    layers: [
+        colombiaBoundary,
+        colombiaDepartments,
+        colombiaRivers,
+        colombiaRoads
+    ]
 });
 
-// Add the map controls:
-map.addControl(new ScaleLine()); //Controls can be added using the addControl() map function
+
+// Map Initialization
+let mapOrigin = fromLonLat([-74, 4.6]);
+let zoomLevel = 5;
+let map = new Map({
+    target: document.getElementById('map'),
+    //layers: [basemapLayers, overlayLayers],
+    layers: [],
+    view: new View({
+        center: mapOrigin,
+        zoom: zoomLevel
+    }),
+    projection: 'EPSG:3857'
+});
+
+// Add the map controls here:
+map.addControl(new ScaleLine());
 map.addControl(new FullScreen());
 map.addControl(
     new MousePosition({
@@ -83,154 +106,213 @@ map.addControl(
     })
 );
 
+// Add the LayerSwitcher control here:
 var layerSwitcher = new LayerSwitcher({});
 map.addControl(layerSwitcher);
 
-//OPTIONAL
-//Add the Bing Maps layers
-var BING_MAPS_KEY = "AqbDxABFot3cmpxfshRqLmg8UTuPv_bg69Ej3d5AkGmjaJy_w5eFSSbOzoHeN2_H";
-var bingRoads = new Tile({
-    title: 'Bing Maps—Roads',
+// Add the Stadia Basemaps here:
+var stamenWatercolor = new Tile({
+    title: 'Stamen Watercolor',
     type: 'base',
-    visible: false,
-    source: new BingMaps({
-        key: BING_MAPS_KEY,
-        imagerySet: 'Road'
-    })
-});
-var bingAerial = new Tile({
-    title: 'Bing Maps—Aerial',
-    type: 'base',
-    visible: false,
-    source: new BingMaps({
-        key: BING_MAPS_KEY,
-        imagerySet: 'Aerial'
-    })
-});
-basemapLayers.getLayers().extend([bingRoads, bingAerial]);
-
-//Add the Stadia Maps layers
-var stadiaWatercolor = new Tile({
-    title: "Stadia Watercolor",
-    type: "base",
     visible: false,
     source: new StadiaMaps({
         layer: 'stamen_watercolor'
     })
-})
-var stadiaToner = new Tile({
-    title: "Stadia Toner",
-    type: "base",
+});
+var stamenToner = new Tile({
+    title: 'Stamen Toner',
+    type: 'base',
     visible: false,
     source: new StadiaMaps({
         layer: 'stamen_toner'
     })
-})
-basemapLayers.getLayers().extend([stadiaWatercolor, stadiaToner]);
-
-//Add the WFS layer
-let vectorSource = new VectorSource({});
-const vectorLayer = new Vector({
-    title: "Colombia water areas",
-    source: vectorSource,
-    style: new Style({
-        stroke: new Stroke({
-            color: 'rgb(255, 102, 0)',
-            width: 4
-        })
-    }),
-    zIndex: 10
 });
-overlayLayers.getLayers().extend([vectorLayer]);
+basemapLayers.getLayers().extend([stamenWatercolor, stamenToner]);
 
+// Add the ESRI XYZ basemaps here:
+var esriTopoBasemap = new Tile({
+    title: 'ESRI Topographic',
+    type: 'base',
+    visible: false,
+    source: new XYZ({
+        attributions:
+            'Tiles © <a href="https://services.arcgisonline.com/ArcGIS/' +
+            'rest/services/World_Topo_Map/MapServer">ArcGIS</a>',
+        url:
+            'https://server.arcgisonline.com/ArcGIS/rest/services/' +
+            'World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+    }),
+});
+var esriWorldImagery = new Tile({
+    title: 'ESRI World Imagery',
+    type: 'base',
+    visible: false,
+    source: new XYZ({
+        attributions:
+            'Tiles © <a href="https://services.arcgisonline.com/ArcGIS/' +
+            'rest/services/World_Imagery/MapServer">ArcGIS</a>',
+        url:
+            'https://server.arcgisonline.com/ArcGIS/rest/services/' +
+            'World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    }),
+});
+basemapLayers.getLayers().extend([
+    esriTopoBasemap, esriWorldImagery
+]);
 
-// This allows to use the function in a callback!
-function loadFeatures(response) {
-    vectorSource.addFeatures(new GeoJSON().readFeatures(response))
-}
-// This is not a good practice, but works for the jsonp.
-window.loadFeatures = loadFeatures;
+// Add the WFS layer here:
+// First, the URL definition:
+var wfsUrl = "https://www.gis-geoserver.polimi.it/geoserver/gis/wfs?" + 
+"service=WFS&" + 
+"version=2.0.0&" +
+"request=GetFeature&" + 
+"typeName=gis:COL_water_areas&" + 
+"srsname=EPSG:3857&" + 
+"outputFormat=application/json";
+// Then the Source and Layer definitions:
+let wfsSource = new VectorSource({});
+let wfsLayer = new Vector({
+    title: "Colombia Water Areas",
+    source: wfsSource,
+    visible: true,
+    style: new Style({
+        fill: new Fill({
+            color: "#bde0fe"
+        }),
+        stroke: new Stroke({
+            width: 2,
+            color: "#a2d2ff"
+        })
+    })
+});
 
-var base_url = "https://www.gis-geoserver.polimi.it/geoserver/gis/ows?";
-var wfs_url = base_url;
-wfs_url += "service=WFS&"
-wfs_url += "version=2.0.0&"
-wfs_url += "request=GetFeature&"
-wfs_url += "typeName=gis%3ACOL_water_areas&"
-wfs_url += "outputFormat=text%2Fjavascript&"
-wfs_url += "srsname=EPSG:3857&"
-wfs_url += "format_options=callback:loadFeatures"
+// Finally the call to the WFS service:
+fetch(wfsUrl)
+.then((response) => {
+    if (!response.ok) {
+        throw new Error('Error ' + response.statusText);
+    }
+    response.json().then(data => {
+        wfsSource.addFeatures(
+	    new GeoJSON().readFeatures(data)
+	);
+    })
+});
+overlayLayers.getLayers().extend([wfsLayer]);
 
-// This will request the WFS layer once the map is rendered.
-// Uses the map event 'postrender': https://openlayers.org/en/v8.2.0/apidoc/module-ol_MapEvent-MapEvent.html#event:postrender
-map.once('postrender', (event) => {
-    // Load the WFS layer
-    $.ajax({ url: wfs_url, dataType: 'jsonp' });
-})
+// Add the local static GeoJSON layer here:
+let staticGeoJSONSource = new VectorSource({
+    url: '../geojson/COL_adm2.geojson', 
+    format: new GeoJSON()
+});
+let staticGeoJSONLayer = new Vector({
+    title: "Colombia Municipalities",
+    source: staticGeoJSONSource,
+    style: new Style({
+        fill: new Fill({
+            color: "rgba(255, 127, 80, 0.5)"
+        }),
+        stroke: new Stroke({
+            width: 2,
+            color: "#ff7f50"
+        })
+    })
+});
+overlayLayers.getLayers().push(staticGeoJSONLayer);
 
-//Add the code for the Pop-up
+// Add the popup code here:
 var container = document.getElementById('popup');
 var content = document.getElementById('popup-content');
 var closer = document.getElementById('popup-closer');
-
 var popup = new Overlay({
     element: container
-});
+}); 
+
 map.addOverlay(popup);
 
-// This ensures that JQuery ($) is already available in the page.
-$(document).ready(function () {
-    map.on('singleclick', function (event) {
-        //This iterates over all the features that are located on the pixel of the click (can be many)
-        var feature = map.forEachFeatureAtPixel(event.pixel, function (feature, layer) {
-            return feature;
-        });
-
-        //If there is a feature, open the popup by setting a position to it and put the data from the feature
-        if (feature != null) {
-            var pixel = event.pixel;
-            var coord = map.getCoordinateFromPixel(pixel);
-            popup.setPosition(coord);
-            content.innerHTML =
-                '<h5>Colombia Water Areas</h5><br><b>Name: </b>' +
-                feature.get('NAME') +
-                '</br><b>Description: </b>' +
-                feature.get('HYC_DESCRI');
-        } else {
-            //Only if the colombiaRoads layer is visible, do the GetFeatureInfo request
-            if (colombiaRoads.getVisible()) {
-                var viewResolution = (map.getView().getResolution());
-                var url = colombiaRoads.getSource().getFeatureInfoUrl(event.coordinate, viewResolution, 'EPSG:3857', { 'INFO_FORMAT': 'text/html' });
-
-                if (url) {
-                    var pixel = event.pixel;
-                    var coord = map.getCoordinateFromPixel(pixel);
-                    popup.setPosition(coord);
-                    //We do again the AJAX request to get the data from the GetFeatureInfo request
-                    $.ajax({ url: url })
-                        .done((data) => {
-                            //Put the data of the GetFeatureInfo response inside the pop-up
-                            //The data that arrives is in HTML
-                            content.innerHTML = data;
-                        });
-                }
-            }
-        }
-    });
-});
-
-
-// The click event handler for closing the popup.
 closer.onclick = function () {
     popup.setPosition(undefined);
-    closer.blur();
+    closer.blur(); 
     return false;
 };
 
 
-// Adding map event for pointermove
-map.on('pointermove', function (event) {
+// Add the singleclick event code here
+map.on('singleclick', function (event) {
+    var feature = map.forEachFeatureAtPixel(
+        event.pixel, 
+        function (feature, layer) {
+            if(layer == staticGeoJSONLayer){
+                return feature;
+            }
+        }
+    );
+
+    if (feature != null) {
+        var pixel = event.pixel;
+        var coord = map.getCoordinateFromPixel(pixel);
+        popup.setPosition(coord);
+
+        content.innerHTML =
+            '<h5>Administrative Level 2</h5><br>' +
+            '<span>' +
+            feature.get('name_2') + ', ' +
+            feature.get('name_1')
+            '</span>';
+    }
+});
+
+// Add the pointermove event code here:
+map.on('pointermove', function(event) {
     var pixel = map.getEventPixel(event.originalEvent);
     var hit = map.hasFeatureAtPixel(pixel);
     map.getTarget().style.cursor = hit ? 'pointer' : '';
 });
+
+// Add the legend code here:
+var legendHTMLString = '<ul>';
+function getLegendElement(title, color){
+    return '<li>' + 
+        '<span class="legend-color" style="background-color: ' + color + ' ">' + 
+        '</span><span>' + 
+        title +
+        '</span></li>';
+}
+
+for(let overlayLayer of overlayLayers.getLayers().getArray()){
+    if(overlayLayer.getSource() instanceof ImageWMS){
+        var legendURLParams = {format: "application/json"};
+        var legendUrl = overlayLayer.getSource().getLegendUrl(0, legendURLParams);
+        // make the legend JSON request
+        await fetch(legendUrl).then(async (response) => {
+            await response.json().then((data) => {
+                var layerTitle = overlayLayer.get('title');
+                var layerSymbolizer = data["Legend"][0]["rules"][0]["symbolizers"][0];
+                var layerColor = null;
+                if("Polygon" in layerSymbolizer){
+                    layerColor = layerSymbolizer["Polygon"]["fill"];
+                } else if("Line" in layerSymbolizer){
+                    layerColor = layerSymbolizer["Line"]["stroke"];
+                }
+
+                if(layerColor != null){
+                    legendHTMLString += getLegendElement(layerTitle, layerColor);
+                }
+            });
+        });
+
+    } else {
+        var layerStyle = overlayLayer.getStyle();
+        var layerColor = layerStyle.getFill().getColor();
+        var layerTitle = overlayLayer.get('title');
+        legendHTMLString += getLegendElement(layerTitle, layerColor);
+    }
+}
+// Finish building the legend HTML string
+var legendContent = document.getElementById('legend-content');
+legendHTMLString += "</ul>";
+legendContent.innerHTML = legendHTMLString;
+
+// Add the layer groups to the map here, at the end of the script!
+map.addLayer(basemapLayers);
+map.addLayer(overlayLayers);

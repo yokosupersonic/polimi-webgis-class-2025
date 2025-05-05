@@ -89,36 +89,35 @@
     right: 8px;
 }
 
-.ol-popup-closer:after {
+.ol-popup-closer:after {}
+
+.legend-container{
+    position: absolute;
+    z-index: 9999;
+    background-color: white;
+    left: 10px;
+    bottom: 50px;
+    width: 300px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+.legend-content ul{
+    list-style: none;
+}
+
+.legend-color {
+    width: 10px;
+    height: 10px;
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.legend-title{
+    font-size: 25px;
+    text-align: center;
+    padding: 10px;
+    display: block;
 }
 
 /*Add your new styles after this line*/
-.custom-control {
-    bottom: 30px;
-    position: absolute;
-    right: 15px;
-    background: white;
-    border: 2px solid  green;
-    padding: 10px;
-}
-
-.my-legend{
-    display: block;
-    position: absolute;
-    bottom: 45px;
-    left: 10px;
-    background-color: white;
-    padding: 15px;
-    border-radius: 10px;
-    border: 1px solid #cccccc;
-}
-
-.legend-list{
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.legend-list li{
-    margin-bottom: 5px;
-}
