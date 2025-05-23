@@ -5,7 +5,7 @@
   "scripts": {
     "start": "vite --base=./",
     "build-production": "vite build --base=/polimi-webgis-class-2025/",
-    "build-local": "vite build",
+    "build-local": "vite build --outDir docs",
     "preview": "vite preview --base=./"
   },
   "author": "",

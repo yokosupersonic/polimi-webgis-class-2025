@@ -97,7 +97,7 @@
     background-color: white;
     left: 10px;
     bottom: 50px;
-    width: 300px;
+    width: 500px;
     border: 1px solid #ccc;
     border-radius: 10px;
 }
@@ -121,3 +121,11 @@
 }
 
 /*Add your new styles after this line*/
+.custom-control {
+    position: absolute;
+    bottom: 30px;
+    right: 15px;
+    background: white;
+    border: 2px solid cadetblue;
+    padding: 10px;
+}
